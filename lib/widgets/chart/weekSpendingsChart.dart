@@ -25,7 +25,7 @@ class WeekSpendingsChart extends StatelessWidget {
         'day': DateFormat.E().format(weekDay),
         'amount': totalSum,
       };
-    });
+    }).reversed.toList();
   }
 
   @override
