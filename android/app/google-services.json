@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1055192064862",
+    "firebase_url": "https://better-better.firebaseio.com",
+    "project_id": "better-better",
+    "storage_bucket": "better-better.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1055192064862:android:ea2862f845087709e465cf",
+        "android_client_info": {
+          "package_name": "betterbetter.betterbetter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1055192064862-6f20pdvg1p6j8ivupeb1dmdsgfktmq32.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "betterbetter.betterbetter",
+            "certificate_hash": "dbdd6549dc1235c210f0922d204546ee3bccd045"
+          }
+        },
+        {
+          "client_id": "1055192064862-6s1f75k8rs4mntu0eb66c26pl75hadek.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKoGSRvBz-Ku6cpDOpxgAvnbVE7ZU5RkE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1055192064862-6s1f75k8rs4mntu0eb66c26pl75hadek.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

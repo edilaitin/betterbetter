@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -126,3 +127,13 @@ class RandomWords extends StatefulWidget {
   @override
   RandomWordsState createState() => RandomWordsState();
 }
+=======
+import 'package:betterbetter/pages/friends.dart';
+import 'package:betterbetter/pages/login.dart';
+import 'package:flutter/material.dart';
+import 'app.dart';
+
+void main() => runApp(App(
+      page: LoginPage(),
+    ));
+>>>>>>> Stashed changes
