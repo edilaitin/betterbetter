@@ -1,9 +1,12 @@
+import 'package:betterbetter/bzl/gameGroups.dart';
 import 'package:betterbetter/bzl/user.dart';
+import 'package:betterbetter/models/gameGroup.dart';
 import 'package:betterbetter/models/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FriendsAPI {
   UserAPI userAPI = UserAPI();
+  GameGroupsAPI gameGroupsAPI = GameGroupsAPI();
   final friendsDB = Firestore.instance.collection("friends");
   final friendInvitationsDB =
       Firestore.instance.collection("friendInvitations");
@@ -103,22 +106,12 @@ class FriendsAPI {
       return [];
   }
 
-  Future<List<String>> getGroupInvitations(userId) async {
-    var document = await groupInvitationsDB.document(userId).get();
-    if (document.exists) {
-      var invitationsIDs = document.data["invitations"];
-      return invitationsIDs;
-    } else
-      return [];
-  }
-
   Future<List<dynamic>> removeInvitation(
       collection, userId, invitationId) async {
     CollectionReference db;
     if (collection == 'friends')
       db = friendInvitationsDB;
-    else
-      db = groupInvitationsDB;
+    else if (collection == 'groups') db = groupInvitationsDB;
 
     var document = await db.document(userId).get();
     var invitationIds = document.data["invitations"];

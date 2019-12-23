@@ -84,7 +84,7 @@ List<Choice> choices = <Choice>[
     title: 'Groups',
     icon: Icons.games,
     widget: Invitations(
-      collection: 'friends',
+      collection: 'groups',
     ),
   ),
 ];

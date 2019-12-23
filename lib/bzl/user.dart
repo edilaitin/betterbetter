@@ -26,18 +26,19 @@ class UserAPI {
     }
   }
 
-  Future<List<GameGroup>> getGameGroups(userId) async {
+  Future<Map<String, GameGroup>> getGameGroups(userId) async {
     var document = await userDB.document(userId).get();
     var gameGroupsIds = document.data["gameGroups"];
-    List<GameGroup> gameGroups = [];
+    Map<String, GameGroup> gameGroups = {};
 
     for (int i = 0; i < gameGroupsIds.length; i++) {
-      gameGroups.add(await gameGroupsAPI.getById(gameGroupsIds[i]));
+      gameGroups[gameGroupsIds[i]] =
+          await gameGroupsAPI.getById(gameGroupsIds[i]);
     }
     return gameGroups;
   }
 
-  Future<List<GameGroup>> addToGameGroup(userId, gameGroupId) async {
+  Future<Map<String, GameGroup>> addToGameGroup(userId, gameGroupId) async {
     var document = await userDB.document(userId).get();
     var gameGroupsIds = document.data["gameGroups"];
 

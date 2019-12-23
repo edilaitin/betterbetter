@@ -23,7 +23,7 @@ class GameGroupsPage extends StatefulWidget {
 class _GameGroupsPageState extends State<GameGroupsPage> {
   GSignIn gSignIn = GSignIn();
   final api = UserAPI();
-  List<GameGroup> gameGroups;
+  Map<String, GameGroup> gameGroups;
 
   @override
   void initState() {

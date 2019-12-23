@@ -1,8 +1,9 @@
+import 'package:betterbetter/models/gameGroup.dart';
 import 'package:betterbetter/models/user.dart';
 import 'package:flutter/material.dart';
 
 class InvitationsList extends StatelessWidget {
-  final List<User> invitations;
+  final Map<String, GameGroup> invitations;
   final Function rejectHandler;
   final Function acceptHandler;
 
@@ -14,7 +15,10 @@ class InvitationsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return invitations.isEmpty
+    List<GameGroup> gameGroupsList = invitations.values.toList();
+    List<String> gameGroupsIds = invitations.keys.toList();
+
+    return gameGroupsList.isEmpty
         ? Column(
             children: [
               SizedBox(
@@ -39,7 +43,7 @@ class InvitationsList extends StatelessWidget {
                   title: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      invitations[index].name,
+                      gameGroupsList[index].name,
                       style: Theme.of(context).textTheme.title,
                     ),
                   ),
@@ -52,7 +56,7 @@ class InvitationsList extends StatelessWidget {
                           child: Text("Confirm"),
                           textColor: Colors.white,
                           color: Theme.of(context).primaryColor,
-                          onPressed: () => acceptHandler(invitations[index].id),
+                          onPressed: () => acceptHandler(gameGroupsIds[index]),
                         ),
                         SizedBox(
                           width: MediaQuery.of(context).size.width * 0.025,
@@ -60,7 +64,7 @@ class InvitationsList extends StatelessWidget {
                         RaisedButton(
                           child: Text("Decline"),
                           color: Colors.white,
-                          onPressed: () => rejectHandler(invitations[index].id),
+                          onPressed: () => rejectHandler(gameGroupsIds[index]),
                         )
                       ],
                     ),
@@ -68,7 +72,7 @@ class InvitationsList extends StatelessWidget {
                 ),
               );
             },
-            itemCount: invitations.length,
+            itemCount: gameGroupsList.length,
           );
   }
 }
