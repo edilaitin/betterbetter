@@ -103,7 +103,7 @@ class ChoiceCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          choice.widget,
+          Expanded(child: choice.widget),
         ],
       ),
     );

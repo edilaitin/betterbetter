@@ -76,8 +76,10 @@ class _GameGroupsPageState extends State<GameGroupsPage> {
           ? Container(
               child: Column(
                 children: <Widget>[
-                  GameGroupsList(
-                    gameGroups: gameGroups,
+                  Expanded(
+                    child: GameGroupsList(
+                      gameGroups: gameGroups,
+                    ),
                   )
                 ],
               ),

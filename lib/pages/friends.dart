@@ -70,10 +70,12 @@ class _FriendsPageState extends State<FriendsPage> {
           ? Container(
               child: Column(
                 children: <Widget>[
-                  FriendsList(
-                    currentUserId: gSignIn.currentUser.id,
-                    friends: friends,
-                    deleteHandler: deleteFriend,
+                  Expanded(
+                    child: FriendsList(
+                      currentUserId: gSignIn.currentUser.id,
+                      friends: friends,
+                      deleteHandler: deleteFriend,
+                    ),
                   )
                 ],
               ),

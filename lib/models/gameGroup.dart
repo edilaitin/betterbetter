@@ -11,6 +11,8 @@ class GameGroup {
   String creator;
   List<dynamic> players;
   Map<String, int> leaderboard;
+  int perfectGuess;
+  int correctGuess;
   UserAPI api = UserAPI();
   final GameGroupsDB = Firestore.instance.collection("gameGroups");
 
@@ -31,6 +33,8 @@ class GameGroup {
     active = mapGroup['active'];
     creator = mapGroup['creator'];
     players = mapGroup['players'];
+    perfectGuess = mapGroup['perfectGuess'];
+    correctGuess = mapGroup['correctGuess'];
     leaderboard = Map<String, int>.from(mapGroup['leaderboard']);
   }
 
@@ -41,6 +45,8 @@ class GameGroup {
       'creator': creator,
       'players': players,
       'leaderboard': leaderboard,
+      'perfectGuess': 3,
+      'correctGuess': 1,
     };
   }
 }

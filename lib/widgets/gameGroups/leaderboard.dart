@@ -42,10 +42,10 @@ class _LeaderboardState extends State<Leaderboard> {
                 SizedBox(
                   height: 50,
                 ),
-                Text(
+                /*Text(
                   "There is no one in this group :)",
                   style: Theme.of(context).textTheme.title,
-                ),
+                ),*/
               ],
             ),
           )

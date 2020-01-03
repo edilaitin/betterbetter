@@ -5,9 +5,13 @@ import 'package:betterbetter/bzl/user.dart';
 import 'package:betterbetter/models/gameGroup.dart';
 import 'package:betterbetter/models/user.dart';
 import 'package:betterbetter/routes/gameGroup.dart';
+import 'package:betterbetter/widgets/gameGroups/addMatch.dart';
 import 'package:betterbetter/widgets/gameGroups/leaderboard.dart';
 import 'package:betterbetter/widgets/gameGroups/peopleList.dart';
+import 'package:betterbetter/widgets/gameGroups/settings.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../models/match.dart';
 
 import '../drawer.dart';
 
@@ -31,6 +35,7 @@ class _GameGroupPageState extends State<GameGroupPage> {
   List<User> invitePlayers = [];
   Map<dynamic, dynamic> scores;
   GSignIn gSignIn = GSignIn();
+  Map<String, Match> matches;
 
   _GameGroupPageState(groupid) {
     this.groupid = groupid;
@@ -51,6 +56,7 @@ class _GameGroupPageState extends State<GameGroupPage> {
             });
             if (!friendIsInGroup) invitePlayers.add(friend);
           });
+          print(gameGroup.perfectGuess);
           setState(() {});
         });
       });
@@ -68,23 +74,29 @@ class _GameGroupPageState extends State<GameGroupPage> {
       case 1:
         return Column(
           children: <Widget>[
-            Leaderboard(
-              scores: scores,
+            Expanded(
+              child: Leaderboard(
+                scores: scores,
+              ),
             ),
           ],
         );
       case 2:
         return Column(
           children: <Widget>[
-            PeopleList(
-              people: invitePlayers,
-              groupid: groupid,
+            Expanded(
+              child: PeopleList(
+                people: invitePlayers,
+                groupid: groupid,
+              ),
             ),
           ],
         );
       case 3:
-        return Text(
-          'Index 0: Home',
+        return GroupSettings(
+          groupid: groupid,
+          perfectGuess: gameGroup.perfectGuess,
+          correctGuess: gameGroup.correctGuess,
         );
     }
   }
@@ -93,6 +105,31 @@ class _GameGroupPageState extends State<GameGroupPage> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void addMatch(String homeTeam, String awayTeam, Timestamp timestamp) async {
+    var match = Match(
+      group: groupid,
+      homeTeam: homeTeam,
+      awayTeam: awayTeam,
+      date: timestamp,
+    );
+    await Future.delayed(Duration(seconds: 1));
+
+    api.getMatches(groupid).then((result) {
+      setState(() {
+        matches = result;
+      });
+    });
+  }
+
+  void startAddMatch(BuildContext ctx) {
+    showDialog(
+        barrierDismissible: false,
+        context: ctx,
+        builder: (builderContext) {
+          return AddMatch(addMatch);
+        });
   }
 
   @override
@@ -134,7 +171,7 @@ class _GameGroupPageState extends State<GameGroupPage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),
               title: Text('Settings'),
-            )
+            ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).accentColor,
@@ -143,6 +180,14 @@ class _GameGroupPageState extends State<GameGroupPage> {
         backgroundColor: Theme.of(context).primaryColor,
         onTap: _onItemTapped,
       ),
+      floatingActionButton: (gameGroup != null &&
+              gSignIn.currentUser.id == gameGroup.creator &&
+              _selectedIndex == 0)
+          ? FloatingActionButton(
+              onPressed: () => startAddMatch(context),
+              child: Icon(Icons.add),
+            )
+          : Container(),
     );
   }
 }

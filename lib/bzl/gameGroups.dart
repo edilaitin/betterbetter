@@ -1,13 +1,16 @@
 import 'dart:collection';
 
+import 'package:betterbetter/bzl/matches.dart';
 import 'package:betterbetter/bzl/user.dart';
 import 'package:betterbetter/models/gameGroup.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/match.dart';
 
 class GameGroupsAPI {
   final gameGroupsDB = Firestore.instance.collection("gameGroups");
   final groupInvitationsDB = Firestore.instance.collection("groupInvitations");
   final userDB = Firestore.instance.collection("users");
+  final matchesAPI = MatchesAPI();
 
   Future<GameGroup> getById(groupid) async {
     var document = await gameGroupsDB.document(groupid).get();
@@ -139,5 +142,29 @@ class GameGroupsAPI {
     await removeInvitation(groupid, userId);
 
     return await getGroupInvitations(userId);
+  }
+
+  void updateSettings(groupid, String correctGuess, perfectGuess) {
+    gameGroupsDB.document(groupid).updateData({
+      "correctGuess": int.parse(correctGuess),
+      "perfectGuess": int.parse(perfectGuess),
+    });
+  }
+
+  Future<Map<String, Match>> getMatches(groupid) async {
+    return await matchesAPI.getMatches(groupid);
+  }
+
+  Future<Map<String, Match>> addMatchToGroup(groupid, matchid) async {
+    var document = await gameGroupsDB.document(groupid).get();
+    var matchesIds = document.data["matches"];
+
+    var newMatchesIds = new List<String>.from(matchesIds);
+    if (!newMatchesIds.contains(matchid)) newMatchesIds.add(matchid);
+
+    await gameGroupsDB.document(groupid).updateData({
+      "matches": newMatchesIds,
+    });
+    return await getMatches(groupid);
   }
 }
