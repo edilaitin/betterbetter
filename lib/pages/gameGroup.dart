@@ -7,6 +7,8 @@ import 'package:betterbetter/models/user.dart';
 import 'package:betterbetter/routes/gameGroup.dart';
 import 'package:betterbetter/widgets/gameGroups/addMatch.dart';
 import 'package:betterbetter/widgets/gameGroups/leaderboard.dart';
+import 'package:betterbetter/widgets/gameGroups/matchTile.dart';
+import 'package:betterbetter/widgets/gameGroups/matchesList.dart';
 import 'package:betterbetter/widgets/gameGroups/peopleList.dart';
 import 'package:betterbetter/widgets/gameGroups/settings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -31,9 +33,9 @@ class _GameGroupPageState extends State<GameGroupPage> {
   final api = GameGroupsAPI();
   final userApi = UserAPI();
   final friendsApi = FriendsAPI();
+  bool finishedLoading = false;
   GameGroup gameGroup;
   List<User> invitePlayers = [];
-  Map<dynamic, dynamic> scores;
   GSignIn gSignIn = GSignIn();
   Map<String, Match> matches;
 
@@ -46,17 +48,17 @@ class _GameGroupPageState extends State<GameGroupPage> {
     api.getById(groupid).then((result) {
       gameGroup = result;
       setState(() {});
-      api.getLeaderboard(groupid).then((leaderboard) {
-        scores = leaderboard;
-        friendsApi.getFriends(gSignIn.currentUser.id).then((friends) {
-          friends.forEach((friend) {
-            bool friendIsInGroup = false;
-            gameGroup.players.forEach((playerId) {
-              if (friend.id == playerId) friendIsInGroup = true;
-            });
-            if (!friendIsInGroup) invitePlayers.add(friend);
+      friendsApi.getFriends(gSignIn.currentUser.id).then((friends) {
+        friends.forEach((friend) {
+          bool friendIsInGroup = false;
+          gameGroup.players.forEach((playerId) {
+            if (friend.id == playerId) friendIsInGroup = true;
           });
-          print(gameGroup.perfectGuess);
+          if (!friendIsInGroup) invitePlayers.add(friend);
+        });
+        api.getMatches(groupid).then((result) {
+          matches = result;
+          finishedLoading = true;
           setState(() {});
         });
       });
@@ -68,15 +70,25 @@ class _GameGroupPageState extends State<GameGroupPage> {
   Widget getWidget(int index) {
     switch (index) {
       case 0:
-        return Text(
-          'Index 0: Home',
-        );
+        return finishedLoading == true
+            ? Column(
+                children: <Widget>[
+                  Expanded(
+                    child: MatchesList(
+                      isCreator: gSignIn.currentUser.id == gameGroup.creator,
+                      groupid: groupid,
+                      userId: gSignIn.currentUser.id,
+                    ),
+                  ),
+                ],
+              )
+            : CircularProgressIndicator();
       case 1:
         return Column(
           children: <Widget>[
             Expanded(
               child: Leaderboard(
-                scores: scores,
+                groupid: groupid,
               ),
             ),
           ],

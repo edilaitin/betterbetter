@@ -158,13 +158,19 @@ class GameGroupsAPI {
   Future<Map<String, Match>> addMatchToGroup(groupid, matchid) async {
     var document = await gameGroupsDB.document(groupid).get();
     var matchesIds = document.data["matches"];
+    if (matchesIds == null) {
+      await gameGroupsDB.document(groupid).updateData({
+        "matches": [matchid],
+      });
+      return await getMatches(groupid);
+    } else {
+      var newMatchesIds = new List<String>.from(matchesIds);
+      if (!newMatchesIds.contains(matchid)) newMatchesIds.add(matchid);
 
-    var newMatchesIds = new List<String>.from(matchesIds);
-    if (!newMatchesIds.contains(matchid)) newMatchesIds.add(matchid);
-
-    await gameGroupsDB.document(groupid).updateData({
-      "matches": newMatchesIds,
-    });
-    return await getMatches(groupid);
+      await gameGroupsDB.document(groupid).updateData({
+        "matches": newMatchesIds,
+      });
+      return await getMatches(groupid);
+    }
   }
 }

@@ -4,9 +4,10 @@ import 'package:betterbetter/models/user.dart';
 import 'package:flutter/material.dart';
 
 class Leaderboard extends StatefulWidget {
-  final Map<dynamic, dynamic> scores;
+  Map<dynamic, dynamic> scores = {};
+  final String groupid;
 
-  Leaderboard({this.scores});
+  Leaderboard({this.groupid});
 
   @override
   _LeaderboardState createState() => _LeaderboardState(scores: this.scores);
@@ -15,20 +16,24 @@ class Leaderboard extends StatefulWidget {
 class _LeaderboardState extends State<Leaderboard> {
   List<User> players = [];
   List<int> points;
-  final Map<dynamic, dynamic> scores;
+  Map<dynamic, dynamic> scores;
   final UserAPI userAPI = new UserAPI();
+  final api = GameGroupsAPI();
 
   _LeaderboardState({this.scores});
   final GameGroupsAPI gameGroupsAPI = GameGroupsAPI();
 
   @override
   void initState() {
-    points = List<int>.from(scores.values.toList());
-    List<String> usersIds = List<String>.from(scores.keys.toList());
-    usersIds.forEach((userid) {
-      userAPI.getById(userid).then((user) {
-        players.add(user);
-        setState(() {});
+    api.getLeaderboard(widget.groupid).then((leaderboard) {
+      scores = leaderboard;
+      points = List<int>.from(scores.values.toList());
+      List<String> usersIds = List<String>.from(scores.keys.toList());
+      usersIds.forEach((userid) {
+        userAPI.getById(userid).then((user) {
+          players.add(user);
+          setState(() {});
+        });
       });
     });
   }

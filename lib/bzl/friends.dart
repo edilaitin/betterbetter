@@ -1,146 +1,170 @@
-import 'package:betterbetter/bzl/gameGroups.dart';
-import 'package:betterbetter/bzl/user.dart';
-import 'package:betterbetter/models/gameGroup.dart';
-import 'package:betterbetter/models/user.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+#include <stdlib.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <readline/readline.h>
+#include <readline/history.h> 
+#include <unistd.h>
+#include <sys/wait.h>
 
-class FriendsAPI {
-  UserAPI userAPI = UserAPI();
-  GameGroupsAPI gameGroupsAPI = GameGroupsAPI();
-  final friendsDB = Firestore.instance.collection("friends");
-  final friendInvitationsDB =
-      Firestore.instance.collection("friendInvitations");
-  final groupInvitationsDB = Firestore.instance.collection("groupInvitations");
+#define MAX_COMMANDS 50
+#define MAX_PARAMS 15
 
-  Future<List<User>> getFriends(userId) async {
-    var document = await friendsDB.document(userId).get();
-    if (document.exists) {
-      var friendsIDs = document.data["friends"];
-      List<User> friends = [];
+char ***get_input(char *);
 
-      //remove the friend from the list
-      for (int i = 0; i < friendsIDs.length; i++) {
-        friends.add(await userAPI.getById(friendsIDs[i]));
-      }
-      return friends;
-    } else {
-      friendsDB.document(userId).setData({"friends": []});
-      return [];
+int spawn_proc (int in, int out, char ***comands)
+{
+  pid_t pid;
+
+  if ((pid = fork ()) == 0)
+    {
+      if (in != 0)
+        {
+          dup2 (in, 0);
+          close (in);
+        }
+
+      if (out != 1)
+        {
+          dup2 (out, 1);
+          close (out);
+        }
+
+      return execvp (comands[0][0], (char * const *)comands[0]);
     }
-  }
 
-  Future<List<User>> addFriend(userId, friendId) async {
-    var document = await friendsDB.document(userId).get();
+  return pid;
+}
 
-    if (document.exists) {
-      var friendsIds = document.data["friends"];
-      var newFriendsIds = [];
+int fork_pipes (int n, char ***comands)
+{
+  int i;
+  pid_t pid;
+  int in, fd [2];
 
-      for (int i = 0; i < friendsIds.length; i++) {
-        newFriendsIds.add(friendsIds[i]);
-      }
-      //finnaly add the friend
-      if (!newFriendsIds.contains(friendId)) newFriendsIds.add(friendId);
+  /* The first process should get its input from the original file descriptor 0.  */
+  in = 0;
 
-      var finalObject = {"friends": newFriendsIds};
+  /* Note the loop bound, we spawn here all, but the last stage of the pipeline.  */
+  for (i = 0; i < n - 1; ++i)
+    {
+      pipe (fd);
 
-      await friendsDB.document(userId).updateData(finalObject);
-      return await getFriends(userId);
-    } else {
-      friendsDB.document(userId).setData({"friends": []});
-      return [];
+      /* f [1] is the write end of the pipe, we carry `in` from the prev iteration.  */
+      spawn_proc (in, fd [1], comands + i);
+
+      /* No need for the write end of the pipe, the child will write here.  */
+      close (fd [1]);
+
+      /* Keep the read end of the pipe, the next child will read from there.  */
+      in = fd [0];
     }
-  }
 
-  Future<List<User>> removeFriend(userId, friendId) async {
-    var document = await friendsDB.document(userId).get();
-    var friendsIds = document.data["friends"];
-    var newFriendsIds = [];
+  /* Last stage of the pipeline - set stdin be the read end of the previous pipe
+     and output to the original file descriptor 1. */  
+  if (in != 0)
+    dup2 (in, 0);
 
-    for (int i = 0; i < friendsIds.length; i++) {
-      if (friendsIds[i] != friendId) {
-        newFriendsIds.add(friendsIds[i]);
-      }
+  /* Execute the last stage with the current process. */
+  return execvp (comands[i][0], (char * const *)comands[i]);
+}
+
+int getNrCommands(char ***commands) 
+{
+    for(int nr = 0; nr < MAX_COMMANDS; nr++)
+    {
+        if(commands[nr][0][0] == '\0')
+           return nr;
     }
-    var finalObject = {"friends": newFriendsIds};
+}
 
-    await friendsDB.document(userId).updateData(finalObject);
-    return await getFriends(userId);
-  }
+int main() {
+    char ***commands;
+    char *input;
+    pid_t child_pid;
+    int stat_loc;
+    int c;
 
-  Future<void> inviteFriend(String userId, String invitedUserEmail) async {
-    invitedUserEmail = invitedUserEmail.trim();
-    var invitedUserId = await userAPI.getIdByEmail(invitedUserEmail);
-    if (invitedUserId == null) return;
+    while (1) {
+        input = readline("\n>");
+        add_history(input); 
+        commands = get_input(input);
+        
+        while ((c = getopt (MAX_COMMANDS, commands[0], "ls:")) != -1)
+        {
+            printf("%c\n", c);
+        }
+        
+        int numCommands = getNrCommands(commands);
 
-    var document = await friendInvitationsDB.document(invitedUserId).get();
-    if (!document.exists) {
-      friendInvitationsDB.document(invitedUserId).setData({
-        "invitations": [
-          userId,
-        ]
-      });
-    } else {
-      var invitations = document.data["invitations"];
+        child_pid = fork();
+        if (child_pid < 0) {
+            perror("Fork failed");
+            exit(1);
+        }
 
-      var newInvitations = new List<String>.from(invitations);
-      if (!newInvitations.contains(userId)) newInvitations.add(userId);
+        if (child_pid == 0) {
+            fork_pipes(numCommands, commands);
+            exit(1);
+            
+        } else {
+            waitpid(child_pid, &stat_loc, WUNTRACED);
+        }
 
-      friendInvitationsDB.document(invitedUserId).updateData({
-        "invitations": newInvitations,
-      });
+        free(input);
+        free(commands);
     }
-  }
 
-  Future<List<User>> getFriendInvitations(userId) async {
-    var document = await friendInvitationsDB.document(userId).get();
-    if (document.exists) {
-      var invitationsIDs = document.data["invitations"];
-      List<User> users = [];
+    return 0;
+}
 
-      for (int i = 0; i < invitationsIDs.length; i++) {
-        users.add(await userAPI.getById(invitationsIDs[i]));
-      }
-      return users;
-    } else
-      return [];
-  }
 
-  Future<List<dynamic>> removeInvitation(
-      collection, userId, invitationId) async {
-    CollectionReference db;
-    if (collection == 'friends')
-      db = friendInvitationsDB;
-    else if (collection == 'groups') db = groupInvitationsDB;
+void trimSpaces(char * s) {
+    char * p = s;
+    int l = strlen(p);
 
-    var document = await db.document(userId).get();
-    var invitationIds = document.data["invitations"];
-    var newInvitationIds = [];
+    while(isspace(p[l - 1])) p[--l] = 0;
+    while(* p && isspace(* p)) ++p, --l;
 
-    for (int i = 0; i < invitationIds.length; i++) {
-      if (invitationIds[i] != invitationId) {
-        newInvitationIds.add(invitationIds[i]);
-      }
+    memmove(s, p, l + 1);
+} 
+
+char ***get_input(char *input) {
+    char ***commands;
+    commands = calloc(MAX_COMMANDS, sizeof(char**));
+
+    for(int z = 0; z < MAX_COMMANDS; z++) 
+    { 
+        commands[z] = calloc(MAX_COMMANDS, sizeof(char*));
+        for(int i = 0; i < MAX_COMMANDS; i++) 
+        {
+            commands[z][i] = calloc(MAX_COMMANDS, sizeof(char));
+        }
     }
-    var finalObject = {"invitations": newInvitationIds};
+    
+    if (commands == NULL) {
+        perror("malloc failed");
+        exit(1);
+    }
+    
+    char *pipeSeparator = "|";
+    char *pipeParsed;
+    
+    char *spaceSeparator = " ";
+    char *spaceParsed;
+    
+    int pipeIndex = 0;
+    
+    while((pipeParsed = strsep(&input, pipeSeparator)) != NULL) {
+        int index = 0;
+        trimSpaces(pipeParsed);
+        while ((spaceParsed = strsep(&pipeParsed, spaceSeparator)) != NULL) {
+            commands[pipeIndex][index] = spaceParsed;
+            index++;
+        }
+        commands[pipeIndex][index] = NULL;
+        pipeIndex++;
+    }
 
-    await db.document(userId).updateData(finalObject);
-    var newDocument = await db.document(userId).get();
-
-    return newDocument.data["invitations"];
-  }
-
-  Future<List<User>> acceptFriendInvitation(userId, newFriendId) async {
-    addFriend(newFriendId, userId);
-    addFriend(userId, newFriendId);
-    await removeInvitation('friends', userId, newFriendId);
-
-    return await getFriendInvitations(userId);
-  }
-
-  Future<List<User>> rejectFriendInvitation(
-      collection, userId, invitationId) async {
-    await removeInvitation(collection, userId, invitationId);
-    return await getFriendInvitations(userId);
-  }
+    return commands;
 }

@@ -1,5 +1,7 @@
 import 'package:betterbetter/bzl/googleSignIn.dart';
 import 'package:betterbetter/routes/friends.dart';
+import 'package:betterbetter/routes/gameGroup.dart';
+import 'package:betterbetter/routes/gameGroups.dart';
 import 'package:betterbetter/routes/invitations.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
                 onPressed: () async {
                   await gSignIn.handleSignIn();
                   if (gSignIn.currentUser != null)
-                    Navigator.push(context, InvitationsPageRoute());
+                    Navigator.push(context, GameGroupsPageRoute());
                   else
                     return;
                 },
